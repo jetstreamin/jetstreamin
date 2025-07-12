@@ -1,0 +1,31 @@
+--- meshctl/push_s24.sh
++++ meshctl/push_s24.sh
+@@ -1,7 +1,19 @@
+-#!/usr/bin/env bash
+-# Push to Samsung S24 via ADB
++#!/usr/bin/env bash
++# Push to Samsung S24 via ADB (skips if unreachable)
+
+-PHONE_ADB_HOST=${PHONE_ADB_HOST:-192.168.1.100}
+-PHONE_ADB_PORT=${PHONE_ADB_PORT:-5555}
+-
+-adb connect ${PHONE_ADB_HOST}:${PHONE_ADB_PORT}
+-adb push agent_s24/ /sdcard/Download/jetstreamin/agent_s24
+-adb shell 'sh /sdcard/Download/jetstreamin/agent_s24/install.sh'
++PHONE_ADB_HOST=${PHONE_ADB_HOST:-192.168.1.100}
++PHONE_ADB_PORT=${PHONE_ADB_PORT:-5555}
++
++echo "→ Attempting ADB connect to ${PHONE_ADB_HOST}:${PHONE_ADB_PORT}"
++if ! adb connect "${PHONE_ADB_HOST}:${PHONE_ADB_PORT}"; then
++  echo "⚠️ adb connect failed; skipping phone deploy"
++  exit 0
++fi
++
++# verify that the device showed up
++if ! adb devices | grep -q "${PHONE_ADB_HOST}:${PHONE_ADB_PORT}"; then
++  echo "⚠️ no adb devices found; skipping phone deploy"
++  exit 0
++fi
++
++adb push agent_s24/ /sdcard/Download/jetstreamin/agent_s24
++adb shell 'sh /sdcard/Download/jetstreamin/agent_s24/install.sh'
