@@ -18,6 +18,7 @@ jobs:
           pip install -r requirements.txt
           sudo apt-get update && sudo apt-get install -y adb sshpass
       - name: Deploy to Phone (S24)
+        continue-on-error: true
         run: ./meshctl/push_s24.sh
       - name: Deploy to TV
         run: ./meshctl/push_tv.sh
