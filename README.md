@@ -25,3 +25,4 @@ This repository contains the Jetstreamin dual-agent demo scaffold:
 - `shared/`: Mesh communication and voice modules
 - `meshctl/`: Local CLI for deployment and testing
 - `dag/`: Persistent DAG trace log
+<-bash: michael@NucBoxK8Plus:/mnt/c/Products/jetstreamin-private$: No such file or ci test -->
