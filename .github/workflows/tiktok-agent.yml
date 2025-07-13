@@ -2,6 +2,7 @@ name: CI – TikTok Live Agent
 
 on:
   push:
+  workflow_dispatch:
     paths:
       - 'tiktok-live-agent/**'
 
