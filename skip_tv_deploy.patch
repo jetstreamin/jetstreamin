@@ -1,0 +1,20 @@
+--- meshctl/push_tv.sh
++++ meshctl/push_tv.sh
+@@ -1,6 +1,20 @@
+-#!/usr/bin/env bash
+-# Push to TV via SSH
++#!/usr/bin/env bash
++# Push to TV via SSH (skips if unreachable)
+
++TV_HOST=${TV_HOST:-192.168.1.200}
++TV_USER=${TV_USER:-tv}
+
++echo "→ Testing SSH reachability to ${TV_USER}@${TV_HOST}"
++if ! ssh -o BatchMode=yes -o ConnectTimeout=5 ${TV_USER}@${TV_HOST} 'echo ok' >/dev/null 2>&1; then
++  echo "⚠️ Cannot SSH to ${TV_USER}@${TV_HOST}; skipping TV deploy"
++  exit 0
++fi
+
+ ssh ${TV_USER}@${TV_HOST} "mkdir -p ~/jetstreamin/agent_tv"
+ scp -r agent_tv/* ${TV_USER}@${TV_HOST}:~/jetstreamin/agent_tv/
+ ssh ${TV_USER}@${TV_HOST} "sh ~/jetstreamin/agent_tv/install.sh"
