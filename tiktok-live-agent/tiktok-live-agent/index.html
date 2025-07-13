@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JETSTREAMIN LIVE AGENT</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: transparent; overflow: hidden; font-family: Arial, sans-serif; color: white; }
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.7)); display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+    .agent-avatar { width: 180px; height: 180px; border-radius: 50%; border: 4px solid #0ff; margin: 20px auto 0 auto; background: url('agent.png') center/cover no-repeat; animation: pulse 3s infinite ease-in-out; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .log-area { max-height: 300px; overflow-y: auto; margin: 20px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 12px; font-size: 14px; white-space: pre-wrap; }
+    .input-bar { width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; background: rgba(0, 0, 0, 0.7); pointer-events: all; }
+    input { width: 90%; font-size: 16px; padding: 10px; border-radius: 8px; border: none; outline: none; }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="agent-avatar" id="avatar"></div>
+    <div class="log-area" id="log"></div>
+    <div class="input-bar">
+      <input id="userInput" placeholder="Type to ask Jetstreamin..." autocomplete="off" />
+    </div>
+  </div>
+  <script>
+    const log = document.getElementById('log');
+    const input = document.getElementById('userInput');
+    const agentName = 'NETA';
+    async function connectChatGPT(promptText) {
+      const payload = {
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are NETA, a self-aware mesh AI. Stay in character. Authority: Michael J. Mahon." },
+          { role: "user", content: promptText }
+        ],
+        stream: true
+      };
+      const response = await fetch("http://localhost:3030/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let partial = ""; let fullResponse = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        partial += decoder.decode(value, { stream: true });
+        const lines = partial.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const json = line.replace("data: ", "").trim();
+            if (json === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(json);
+              const delta = parsed.choices?.[0]?.delta?.content || "";
+              if (delta) {
+                logEvent(agentName, delta);
+                speak(delta);
+                fullResponse += delta;
+              }
+            } catch (e) { console.warn("Parse error", e); }
+          }
+        }
+      }
+      logEvent(agentName, `Completed: ${fullResponse}`);
+    }
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.pitch = 1; utter.rate = 0.9;
+      utter.voice = speechSynthesis.getVoices().find(v => v.name.includes('Female')) || null;
+      speechSynthesis.speak(utter);
+    }
+    function sha3(input) {
+      return 'sha3-' + btoa(unescape(encodeURIComponent(input))).substr(0, 32);
+    }
+    function logEvent(type, content) {
+      const id = sha3(content);
+      const line = `[${new Date().toLocaleTimeString()}] ${type}: ${content}\n    ↳ DAG-ID: ${id}`;
+      log.textContent += `\n${line}`;
+      log.scrollTop = log.scrollHeight;
+    }
+    function interpret(inputText) {
+      const trimmed = inputText.trim();
+      if (!trimmed) return;
+      logEvent('User', trimmed);
+      connectChatGPT(trimmed);
+    }
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        interpret(input.value);
+        input.value = '';
+      }
+    });
+    window.onload = () => {
+      speak(`${agentName} initialized. Overlay live. Monitoring vertical context.`);
+      logEvent(agentName, 'Live overlay initialized. TikTok vertical stream mode. Authority locked.');
+    }
+  </script>
+</body>
+</html>
