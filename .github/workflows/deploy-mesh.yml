@@ -21,4 +21,5 @@ jobs:
         continue-on-error: true
         run: ./meshctl/push_s24.sh
       - name: Deploy to TV
+        continue-on-error: true
         run: ./meshctl/push_tv.sh
