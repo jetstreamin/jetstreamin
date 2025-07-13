@@ -1,0 +1,27 @@
+name: Scheduled CI Trigger
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # every hour; adjust as needed
+
+jobs:
+  empty-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Configure Git
+        run: |
+          git config user.name "jetstreamin-bot"
+          git config user.email "bot@jetstreamin.io"
+
+      - name: Empty commit to main
+        env:
+          PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git remote set-url origin https://$PAT@github.com/jetstreamin/jetstreamin.git
+          git commit --allow-empty -m "Scheduled CI trigger"
+          git push origin main
