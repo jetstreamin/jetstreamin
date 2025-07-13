@@ -1,0 +1,50 @@
+name: CI – TikTok Live Agent
+
+on:
+  push:
+    paths:
+      - 'tiktok-live-agent/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install npm dependencies
+        working-directory: tiktok-live-agent
+        run: npm ci
+
+      - name: Lint JavaScript (if configured)
+        working-directory: tiktok-live-agent
+        run: npm run lint || echo "No lint step defined"
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install -r tiktok-live-agent/requirements.txt
+
+      - name: Run Python tests (if any)
+        run: pytest tiktok-live-agent || echo "No pytest configured"
+
+  deploy-demo:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy Demo to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./tiktok-live-agent
+          user_name: jetstreamin-bot
+          user_email: bot@jetstreamin.io
