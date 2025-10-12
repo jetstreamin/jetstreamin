@@ -1,0 +1,9 @@
+name: jetstreamin-master-trigger
+description: "Trigger for master branch of skatechurch"
+github:
+  owner: 'jetstreamin'
+  name: 'skatechurch'
+  push:
+    branch: '^master$'
+filename: 'cloudbuild.yaml'
+serviceAccount: "projects/gen-lang-client-0854112426/serviceAccounts/507817951617-compute@developer.gserviceaccount.com"
