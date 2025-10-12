@@ -16,27 +16,9 @@ steps:
   - --location=us-central1-a
   - --cluster=jetstreamin-cluster
 
-# 4. Get pod logs
-- name: 'gcr.io/google-cloud-sdk/cloud-sdk'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    gcloud container clusters get-credentials jetstreamin-cluster --zone us-central1-a --project $PROJECT_ID
-    echo "--- Waiting for 60 seconds before getting logs ---"
-    sleep 60
-    POD_NAME=$(kubectl get pods -l app=jetstreamin -o jsonpath='{.items[0].metadata.name}')
-    if [ -n "$POD_NAME" ]; then
-      echo "--- Getting logs for pod: $POD_NAME ---"
-      kubectl logs $POD_NAME
-    else
-      echo "Could not find pod to get logs from."
-    fi
-
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
 
-serviceAccount: 'projects/gen-lang-client-0854112426/serviceAccounts/507817951617@cloudbuild.gserviceaccount.com'
-
 options:
-  logging: CLOUD_LOGGING_ONLY
+  logging: GCS_ONLY
+logsBucket: 'gs://507817951617.cloudbuild-logs.googleusercontent.com'
