@@ -9,3 +9,7 @@ steps:
 
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
+
+options:
+  logging: GCS_ONLY
+logsBucket: 'gs://gen-lang-client-0854112426-cloudbuild-logs'
