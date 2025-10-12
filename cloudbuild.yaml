@@ -10,23 +10,23 @@ steps:
 
 # 2. Build the main application Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest', '.']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest', '.']
 
 # 3. Push the image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest']
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest']
 
 # 4. Deploy the new image to our GKE cluster
 - name: 'gcr.io/cloud-builders/gke-deploy'
   args:
   - run
   - --filename=k8s/deployment.yaml
-  - --image=us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest
+  - --image=us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest
   - --location=us-central1-a
   - --cluster=jetstreamin-cluster
 
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,24 @@
+# Docker
+.dockerignore
+Dockerfile
+Dockerfile.compliance
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
