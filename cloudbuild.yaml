@@ -7,6 +7,16 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest']
 
+# 3. Deploy to GKE
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'deploy'
+    - 'apply'
+    - '--file=k8s/'
+    - '--region=us-central1'
+    - '--cluster=jetstreamin-cluster'
+
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
 
