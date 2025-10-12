@@ -25,6 +25,58 @@ steps:
   - --location=us-central1-a
   - --cluster=jetstreamin-cluster
 
+# 5. Get cluster credentials to see why the deployment is failing
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    gcloud container clusters get-credentials jetstreamin-cluster --zone us-central1-a --project $PROJECT_ID
+
+# 6. Describe the deployment
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: 'describe-deployment'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    kubectl describe deployment jetstreamin-deployment
+
+# 7. Get pod name
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: 'get-pod-name'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    for i in {1..10}; do
+      POD_NAME=$(kubectl get pods -l app=jetstreamin -o jsonpath='{.items[0].metadata.name}')
+      if [ -n "$POD_NAME" ]; then
+        echo "Found pod: $POD_NAME"
+        echo $POD_NAME > /workspace/pod-name
+        break
+      fi
+      echo "Waiting for pod to be created..."
+      sleep 5
+    done
+
+# 8. Get pod logs
+- name: 'gcr.io/cloud-builders/kubectl'
+  id: 'get-pod-logs'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    if [ -f /workspace/pod-name ]; then
+      POD_NAME=$(cat /workspace/pod-name)
+      # Wait a bit for the pod to start
+      sleep 10
+      kubectl logs $POD_NAME
+    else
+      echo "Pod name not found."
+    fi
+
+
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
 
