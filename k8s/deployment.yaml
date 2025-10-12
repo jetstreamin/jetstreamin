@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jetstreamin-deployment
+spec:
+  replicas: 1 # NETA can scale this based on demand
+  selector:
+    matchLabels:
+      app: jetstreamin
+  template:
+    metadata:
+      labels:
+        app: jetstreamin
+    spec:
+      containers:
+      - name: jetstreamin-studio
+        # The image will be replaced by Cloud Build during deployment
+        image: us-central1-docker.pkg.dev/gen-lang-client-0854112426/jetstreamin-repo/jetstreamin-studio:latest
+        ports:
+        - containerPort: 8080
+      # Associate with a GCP Service Account for permissions
+      serviceAccountName: jetstreamin-sa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jetstreamin-service
+spec:
+  type: LoadBalancer # Exposes the service externally via a public IP
+  selector:
+    app: jetstreamin
+  ports:
+  - protocol: TCP
+    port: 80 # Public port
+    targetPort: 8080 # Container port

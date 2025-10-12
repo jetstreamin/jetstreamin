@@ -1,0 +1,29 @@
+steps:
+# 1. Run NETA compliance checks (static analysis)
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    docker build -t compliance-check -f Dockerfile.compliance .
+    docker run compliance-check
+
+# 2. Build the main application Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest', '.']
+
+# 3. Push the image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest']
+
+# 4. Deploy the new image to our GKE cluster
+- name: 'gcr.io/cloud-builders/gke-deploy'
+  args:
+  - run
+  - --filename=k8s/deployment.yaml
+  - --image=us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest
+  - --location=us-central1-a
+  - --cluster=jetstreamin-cluster
+
+images:
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-studio:latest'

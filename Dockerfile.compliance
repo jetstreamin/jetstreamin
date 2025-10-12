@@ -1,0 +1,9 @@
+# Dockerfile for running compliance checks
+FROM python:3.12-slim-bookworm
+
+RUN pip install flake8
+
+WORKDIR /app
+COPY . .
+
+CMD ["flake8", ".", "--count", "--select=E9,F63,F7,F82", "--show-source", "--statistics"]

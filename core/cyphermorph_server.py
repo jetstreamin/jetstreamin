@@ -1,0 +1,98 @@
+import os
+import subprocess
+import logging
+import json
+from flask import Flask, render_template, request, send_from_directory, jsonify
+from google.cloud import secretmanager
+from google.cloud import firestore
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+# Import agents and pipelines
+# from agents.atm import atm
+# from pipelines.multimedia import synthesize_voice
+# from core import dynamic_composer, wanita_uploader
+
+# Initialize the Cyphermorph presentation layer
+app = Flask(__name__, template_folder='../templates')
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [CYPHERMORPH] %(message)s')
+
+OUTPUT_DIR = os.path.join(os.getcwd(), "data", "output")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Initialize Firestore client
+db = firestore.Client()
+DAG_COLLECTION = db.collection(u'dag_state')
+
+def get_youtube_service():
+    """Authenticates using credentials from Secret Manager."""
+    client = secretmanager.SecretManagerServiceClient()
+    secret_name = "projects/gen-lang-client-0854112426/secrets/youtube-token-json/versions/latest"
+    response = client.access_secret_version(request={"name": secret_name})
+    creds_json = response.payload.data.decode("UTF-8")
+    
+    # This assumes the secret stores the content of youtube_token.json
+    creds_info = json.loads(creds_json)
+    creds = Credentials.from_authorized_user_info(creds_info, ["https://www.googleapis.com/auth/upload.youtube"])
+    
+    # Handle refresh logic as before...
+    # ...
+    return build('youtube', 'v3', credentials=creds)
+
+@app.route('/')
+def studio():
+    """Renders the main studio interface, pre-populated by ATM."""
+    logging.info("Request for studio. Generating initial sermon content via ATM.")
+    # initial_sermon_text = atm.generate_sermon_content()
+    initial_sermon_text = "Placeholder sermon text"
+    return render_template('studio.html', sermon_text=initial_sermon_text)
+
+@app.route('/generate', methods=['POST'])
+def generate_video():
+    """Triggers the appropriate video generation pipeline."""
+    sermon_text = request.form['sermon_text']
+    pipeline_type = request.form.get('pipeline', 'ffmpeg') # Default to ffmpeg
+    
+    if pipeline_type == 'veo':
+        logging.info("Veo pipeline selected. Simulating call to Google Veo.")
+        # In a real implementation, this would call the Veo API
+        # with the sermon_text as the prompt.
+        # For now, we return a placeholder.
+        return jsonify({
+            "status": "success",
+            "pipeline": "veo",
+            "message": "Veo generation initiated. This is a simulation.",
+            "video_url": "https://storage.googleapis.com/jetstreamin-veo-output/placeholder_veo.mp4"
+        })
+    else:
+        logging.info("FFmpeg pipeline selected. Generating video.")
+        output_filename = f"sermon_{os.urandom(4).hex()}.mp4"
+        output_path = os.path.join(OUTPUT_DIR, output_filename)
+        
+        # This logic should be moved to a dedicated pipeline script.
+        # For now, we create placeholder audio.
+        audio_path = os.path.join(OUTPUT_DIR, "sermon_voice.mp3")
+        subprocess.run([
+            "ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono",
+            "-t", "20", "-q:a", "9", "-acodec", "libmp3lame", audio_path
+        ], check=True, capture_output=True)
+        
+        # TODO: The sermon_text needs to be parsed and passed to the FFmpeg script.
+        # pipeline_script = os.path.join(os.getcwd(), "pipelines", "multimedia", "create_sermon_video.sh")
+        # subprocess.run(['bash', pipeline_script, audio_path, output_path], check=True, capture_output=True)
+        
+        return jsonify({
+            "status": "success",
+            "pipeline": "ffmpeg",
+            "file": output_filename
+        })
+
+@app.route('/videos/<filename>')
+def get_video(filename):
+    """Serves the generated video file."""
+    return send_from_directory(OUTPUT_DIR, filename)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)
