@@ -11,11 +11,19 @@ steps:
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
   args:
-    - 'deploy'
+    - 'container'
+    - 'clusters'
+    - 'get-credentials'
+    - 'jetstreamin-cluster'
+    - '--zone=us-central1-a'
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
     - 'apply'
-    - '--file=k8s/'
-    - '--region=us-central1'
-    - '--cluster=jetstreamin-cluster'
+    - '-f'
+    - 'k8s/'
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=jetstreamin-cluster'
 
 images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
