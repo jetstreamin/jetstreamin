@@ -30,4 +30,4 @@ COPY . .
 EXPOSE 8080
 
 # Define the command to start the studio web server
-CMD ["python3", "core/cyphermorph_server.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "core.cyphermorph_server:app"]
