@@ -41,6 +41,11 @@ def get_youtube_service():
     # ...
     return build('youtube', 'v3', credentials=creds)
 
+@app.route('/healthz')
+def healthz():
+    """Health check endpoint for Kubernetes."""
+    return "OK", 200
+
 @app.route('/')
 def studio():
     """Renders the main studio interface, pre-populated by ATM."""

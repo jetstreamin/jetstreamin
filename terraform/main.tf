@@ -39,3 +39,16 @@ resource "google_firestore_database" "database" {
   type           = "FIRESTORE_NATIVE"
   depends_on     = [google_project_service.firestore]
 }
+
+// 5. Service Account for GKE Pods to access other GCP services
+resource "google_service_account" "jetstreamin_sa" {
+  account_id   = "jetstreamin-sa"
+  display_name = "Jetstreamin GKE Service Account"
+}
+
+// 6. Grant the Service Account permission to access Secret Manager
+resource "google_project_iam_member" "secret_accessor_binding" {
+  project = "gen-lang-client-0854112426"
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.jetstreamin_sa.email}"
+}
