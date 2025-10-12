@@ -30,4 +30,4 @@ COPY . .
 EXPOSE 8080
 
 # Define the command to start the studio web server
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "core.cyphermorph_server:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--access-logfile", "-", "--error-logfile", "-", "core.cyphermorph_server:app"]
