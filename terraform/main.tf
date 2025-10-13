@@ -46,6 +46,14 @@ resource "google_service_account" "jetstreamin_sa" {
   display_name = "Jetstreamin GKE Service Account"
 }
 
+resource "google_service_account_iam_binding" "workload_identity_binding" {
+  service_account_id = google_service_account.jetstreamin_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+  members = [
+    "serviceAccount:gen-lang-client-0854112426.svc.id.goog[default/jetstreamin-sa]",
+  ]
+}
+
 // 6. Grant the Service Account permission to access Secret Manager
 resource "google_project_iam_member" "secret_accessor_binding" {
   project = "gen-lang-client-0854112426"
