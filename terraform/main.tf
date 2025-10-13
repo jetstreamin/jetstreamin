@@ -13,7 +13,8 @@ resource "google_container_cluster" "primary" {
   node_config {
     machine_type = "e2-medium" // Cost-effective default
     oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/generative-language"
     ]
   }
 }
