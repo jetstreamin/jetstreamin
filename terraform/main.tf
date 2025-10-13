@@ -8,11 +8,12 @@ resource "google_container_cluster" "primary" {
   name     = "jetstreamin-cluster"
   location = "us-central1-a"
   initial_node_count = 1
+  deletion_protection = true
 
   node_config {
     machine_type = "e2-medium" // Cost-effective default
     oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform"
     ]
   }
 }
@@ -25,7 +26,14 @@ resource "google_artifact_registry_repository" "docker_repo" {
   description   = "Docker repository for Jetstreamin agents."
 }
 
+// 3. Enable the Vertex AI and Generative Language APIs
+resource "google_project_service" "vertex_ai" {
+  service = "aiplatform.googleapis.com"
+}
 
+resource "google_project_service" "generative_language" {
+  service = "generativelanguage.googleapis.com"
+}
 
 // 4. Firestore for scalable, serverless DAG state management
 resource "google_project_service" "firestore" {
