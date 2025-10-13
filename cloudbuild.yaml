@@ -54,4 +54,3 @@ images:
 
 options:
   logging: GCS_ONLY
-  logsBucket: 'gs://gen-lang-client-0854112426-cloudbuild-logs'
