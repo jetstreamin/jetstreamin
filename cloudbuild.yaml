@@ -1,4 +1,9 @@
 steps:
+# 0. Initialize Git Submodules
+- name: 'gcr.io/cloud-builders/git'
+  args: ['submodule', 'update', '--init', '--recursive']
+  id: 'Initialize Submodules'
+
 # 1. Build the cyphermorph application Docker image
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/cyphermorph:latest', 'jetstreamin/core']
