@@ -1,0 +1,3 @@
+[submodule "jetstreamin"]
+	path = jetstreamin
+	url = https://github.com/jetstreamin/jetstreamin.git

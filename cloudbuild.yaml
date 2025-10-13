@@ -1,13 +1,40 @@
 steps:
-# 1. Build the main application Docker image
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest', '.']
+# 0. Initialize Git Submodules
+- name: 'gcr.io/cloud-builders/git'
+  args: ['submodule', 'update', '--init', '--recursive']
+  id: 'Initialize Submodules'
 
-# 2. Push the image to Artifact Registry
+# 1. Build the cyphermorph application Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/cyphermorph:latest', 'jetstreamin/core']
+  id: 'Build Cyphermorph'
 
-# 3. Deploy to GKE
+# 2. Build the wanita application Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/wanita:latest', 'jetstreamin/wanita']
+  id: 'Build Wanita'
+
+# 3. Build the daemon13 application Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/daemon13:latest', 'jetstreamin/daemon13']
+  id: 'Build Daemon13'
+
+# 4. Push the cyphermorph image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/cyphermorph:latest']
+  id: 'Push Cyphermorph'
+
+# 5. Push the wanita image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/wanita:latest']
+  id: 'Push Wanita'
+
+# 6. Push the daemon13 image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/daemon13:latest']
+  id: 'Push Daemon13'
+
+# 7. Deploy to GKE
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
   args:
@@ -20,14 +47,15 @@ steps:
   args:
     - 'apply'
     - '-f'
-    - 'k8s/'
+    - 'jetstreamin/k8s/'
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=jetstreamin-cluster'
 
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/jetstreamin-app:latest'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/cyphermorph:latest'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/wanita:latest'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/daemon13:latest'
 
 options:
-  logging: GCS_ONLY
-logsBucket: 'gs://gen-lang-client-0854112426-cloudbuild-logs'
+  logging: CLOUD_LOGGING_ONLY
