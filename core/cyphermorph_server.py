@@ -47,12 +47,10 @@ def healthz():
     return "OK", 200
 
 @app.route('/')
-def studio():
-    """Renders the main studio interface, pre-populated by ATM."""
-    logging.info("Request for studio. Generating initial sermon content via ATM.")
-    # initial_sermon_text = atm.generate_sermon_content()
-    initial_sermon_text = "Placeholder sermon text"
-    return render_template('studio.html', sermon_text=initial_sermon_text)
+def index():
+    """Renders the main sermon studio interface."""
+    logging.info("Request for main studio page.")
+    return render_template('index.html')
 
 @app.route('/generate', methods=['POST'])
 def generate_video():
