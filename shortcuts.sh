@@ -1,0 +1,2 @@
+#loop build monitor 
+while [ "$(gcloud builds list --limit=1 --format='value(status)')" = "WORKING" ]; do echo "Build is still in progress... checking again in 10 seconds."; sleep 10; done; echo "Build has completed!"; gcloud builds list --limit=1

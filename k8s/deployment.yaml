@@ -18,6 +18,12 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
+        env:
+        - name: GOOGLE_AI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: google-ai-api-key
+              key: "1"
         readinessProbe:
           httpGet:
             path: /healthz

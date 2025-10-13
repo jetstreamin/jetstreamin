@@ -1,46 +1,28 @@
 import os
-import subprocess
 import logging
-import json
-from flask import Flask, render_template, request, send_from_directory, jsonify
-from google.cloud import secretmanager
-from google.cloud import firestore
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from flask import Flask, render_template, jsonify
 import google.generativeai as genai
 
-# Import agents and pipelines
-# from agents.atm import atm
-# from pipelines.multimedia import synthesize_voice
-# from core import dynamic_composer, wanita_uploader
-
-# Initialize the Cyphermorph presentation layer
+# Initialize Flask App
 app = Flask(__name__, template_folder='../templates')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [CYPHERMORPH] %(message)s')
 
-OUTPUT_DIR = os.path.join(os.getcwd(), "data", "output")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# Create a specific logger for the application
+logger = logging.getLogger('cyphermorph_server')
 
-# Initialize Firestore client
-db = firestore.Client()
-DAG_COLLECTION = db.collection(u'dag_state')
-
-def get_youtube_service():
-    """Authenticates using credentials from Secret Manager."""
-    client = secretmanager.SecretManagerServiceClient()
-    secret_name = "projects/gen-lang-client-0854112426/secrets/youtube-token-json/versions/latest"
-    response = client.access_secret_version(request={"name": secret_name})
-    creds_json = response.payload.data.decode("UTF-8")
-    
-    # This assumes the secret stores the content of youtube_token.json
-    creds_info = json.loads(creds_json)
-    creds = Credentials.from_authorized_user_info(creds_info, ["https://www.googleapis.com/auth/upload.youtube"])
-    
-    # Handle refresh logic as before...
-    # ...
-    return build('youtube', 'v3', credentials=creds)
+# Configure Generative AI
+# The API key is expected to be set as an environment variable in the deployment
+try:
+    api_key = os.environ.get("GOOGLE_AI_API_KEY")
+    if api_key:
+        genai.configure(api_key=api_key)
+        logging.info("Google Generative AI configured successfully.")
+    else:
+        logging.warning("GOOGLE_AI_API_KEY environment variable not set. The AI generation endpoint will fail.")
+except Exception as e:
+    logging.error(f"Error configuring Google Generative AI: {e}")
 
 @app.route('/healthz')
 def healthz():
@@ -53,73 +35,15 @@ def index():
     logging.info("Request for main studio page.")
     return render_template('index.html')
 
-@app.route('/generate', methods=['POST'])
-def generate_video():
-    """Triggers the appropriate video generation pipeline."""
-    sermon_text = request.form['sermon_text']
-    pipeline_type = request.form.get('pipeline', 'ffmpeg') # Default to ffmpeg
-    
-    if pipeline_type == 'veo':
-        logging.info("Veo pipeline selected. Simulating call to Google Veo.")
-        # In a real implementation, this would call the Veo API
-        # with the sermon_text as the prompt.
-        # For now, we return a placeholder.
-        return jsonify({
-            "status": "success",
-            "pipeline": "veo",
-            "message": "Veo generation initiated. This is a simulation.",
-            "video_url": "https://storage.googleapis.com/jetstreamin-veo-output/placeholder_veo.mp4"
-        })
-    else:
-        logging.info("FFmpeg pipeline selected. Generating video.")
-        output_filename = f"sermon_{os.urandom(4).hex()}.mp4"
-        output_path = os.path.join(OUTPUT_DIR, output_filename)
-        
-        # This logic should be moved to a dedicated pipeline script.
-        # For now, we create placeholder audio.
-        audio_path = os.path.join(OUTPUT_DIR, "sermon_voice.mp3")
-        subprocess.run([
-            "ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono",
-            "-t", "20", "-q:a", "9", "-acodec", "libmp3lame", audio_path
-        ], check=True, capture_output=True)
-        
-        # TODO: The sermon_text needs to be parsed and passed to the FFmpeg script.
-        # pipeline_script = os.path.join(os.getcwd(), "pipelines", "multimedia", "create_sermon_video.sh")
-        # subprocess.run(['bash', pipeline_script, audio_path, output_path], check=True, capture_output=True)
-        
-        return jsonify({
-            "status": "success",
-            "pipeline": "ffmpeg",
-            "file": output_filename
-        })
-
-@app.route('/videos/<filename>')
-def get_video(filename):
-    """Serves the generated video file."""
-    return send_from_directory(OUTPUT_DIR, filename)
-
-def get_google_ai_key():
-    """Fetches the Google AI API key from Secret Manager."""
-    client = secretmanager.SecretManagerServiceClient()
-    secret_name = "projects/gen-lang-client-0854112426/secrets/google-ai-api-key/versions/latest"
-    try:
-        response = client.access_secret_version(request={"name": secret_name})
-        return response.payload.data.decode("UTF-8")
-    except Exception as e:
-        logging.error(f"Could not access the secret {secret_name}: {e}")
-        return None
-
-@app.route('/api/generate')
-def generate_content():
+@app.route('/api/generate', methods=["GET"])
+def generate_sermon():
     """Generates sermon content using Google's Generative AI."""
-    api_key = get_google_ai_key()
-    if not api_key:
-        return jsonify({"title": "Configuration Error", "content": "Could not retrieve AI API key."}), 500
+    if "GOOGLE_AI_API_KEY" not in os.environ:
+        return jsonify({"title": "Configuration Error", "content": "AI API key is not configured on the server."}), 500
 
     try:
-        genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-pro')
-        prompt = "Write a short, inspiring sermon about the intersection of technology and spirituality."
+        prompt = "Write a short, inspiring sermon about the intersection of technology and spirituality, in the style of a modern-day digital prophet."
         response = model.generate_content(prompt)
         
         sermon = {
@@ -129,8 +53,8 @@ def generate_content():
     except Exception as e:
         logging.error(f"Error generating sermon content: {e}")
         sermon = {
-            "title": "Error",
-            "content": "Could not generate sermon content at this time."
+            "title": "Generation Error",
+            "content": f"Could not generate sermon content at this time. Error: {e}"
         }
     return jsonify(sermon)
 
