@@ -11,13 +11,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [CYPHERMORPH] %(mess
 logger = logging.getLogger('cyphermorph_server')
 
 # The google-generativeai library automatically looks for the GOOGLE_API_KEY 
-# environment variable. We must ensure it's set.
-api_key = os.environ.get("GOOGLE_API_KEY")
-if not api_key:
+# environment variable. We are relying on this behavior.
+if not os.environ.get("GOOGLE_API_KEY"):
     logger.warning("GOOGLE_API_KEY environment variable not set. The AI generation endpoint will fail.")
 else:
-    genai.configure(api_key=api_key)
-    logger.info("GOOGLE_API_KEY is set. Google Generative AI is configured.")
+    logger.info("GOOGLE_API_KEY is set. The google-generativeai library will use it automatically.")
 
 @app.route('/healthz')
 def healthz():
