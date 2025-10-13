@@ -53,4 +53,4 @@ images:
 - 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/daemon13:latest'
 
 options:
-  logging: GCS_ONLY
+  logging: CLOUD_LOGGING_ONLY
