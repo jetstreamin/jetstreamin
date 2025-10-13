@@ -7,6 +7,7 @@ from google.cloud import secretmanager
 from google.cloud import firestore
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+import google.generativeai as genai
 
 # Import agents and pipelines
 # from agents.atm import atm
@@ -97,25 +98,39 @@ def get_video(filename):
     """Serves the generated video file."""
     return send_from_directory(OUTPUT_DIR, filename)
 
-import requests
+def get_google_ai_key():
+    """Fetches the Google AI API key from Secret Manager."""
+    client = secretmanager.SecretManagerServiceClient()
+    secret_name = "projects/gen-lang-client-0854112426/secrets/google-ai-api-key/versions/latest"
+    try:
+        response = client.access_secret_version(request={"name": secret_name})
+        return response.payload.data.decode("UTF-8")
+    except Exception as e:
+        logging.error(f"Could not access the secret {secret_name}: {e}")
+        return None
 
 @app.route('/api/generate')
 def generate_content():
-    """Generates sermon content for the frontend by calling an external API."""
+    """Generates sermon content using Google's Generative AI."""
+    api_key = get_google_ai_key()
+    if not api_key:
+        return jsonify({"title": "Configuration Error", "content": "Could not retrieve AI API key."}), 500
+
     try:
-        # Using quotable.io as a placeholder for a sermon generation API
-        response = requests.get("https://api.quotable.io/random")
-        response.raise_for_status()  # Raise an exception for bad status codes
-        data = response.json()
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-pro')
+        prompt = "Write a short, inspiring sermon about the intersection of technology and spirituality."
+        response = model.generate_content(prompt)
+        
         sermon = {
-            "title": f"Sermon on '{data.get('tags', ['Wisdom'])[0]}'",
-            "content": data.get('content', 'Could not retrieve sermon content.')
+            "title": "A Sermon on Digital Divinity",
+            "content": response.text
         }
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching sermon content: {e}")
+    except Exception as e:
+        logging.error(f"Error generating sermon content: {e}")
         sermon = {
             "title": "Error",
-            "content": "Could not retrieve sermon content at this time."
+            "content": "Could not generate sermon content at this time."
         }
     return jsonify(sermon)
 
