@@ -43,7 +43,7 @@ kind: Service
 metadata:
   name: jetstreamin-service
 spec:
-  type: LoadBalancer # Exposes the service externally via a public IP
+  type: LoadBalancer # Exposes the service using a cloud provider's load balancer
   selector:
     app: jetstreamin
   ports:
