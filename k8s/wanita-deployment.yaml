@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wanita-deployment
+  labels:
+    app: wanita
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wanita
+  template:
+    metadata:
+      labels:
+        app: wanita
+    spec:
+      serviceAccountName: jetstreamin-sa
+      containers:
+      - name: wanita
+        image: us-central1-docker.pkg.dev/gen-lang-client-0854112426/jetstreamin-repo/wanita:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1024Mi"
+            cpu: "500m"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wanita-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: wanita
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

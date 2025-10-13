@@ -36,7 +36,7 @@ def generate_sermon():
 
     try:
         # Correctly initialize the model
-        model = genai.GenerativeModel('gemini-1.0-pro-latest')
+        model = genai.GenerativeModel('gemini-pro')
         prompt = "Write a short, inspiring sermon about the intersection of technology and spirituality, in the style of a modern-day digital prophet."
         response = model.generate_content(prompt)
         
