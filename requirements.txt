@@ -1,10 +1,1 @@
-flask
-google-generativeai==0.5.0
-gTTS
-google-api-python-client
-google-auth-oauthlib
-google-cloud-secret-manager
-google-cloud-firestore
-sox
-gunicorn
-requests
+# Jetstreamin agent Python deps

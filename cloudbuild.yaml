@@ -1,22 +1,17 @@
 steps:
-# 0. Initialize Git Submodules
-- name: 'gcr.io/cloud-builders/git'
-  args: ['submodule', 'update', '--init', '--recursive']
-  id: 'Initialize Submodules'
-
 # 1. Build the cyphermorph application Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/cyphermorph:latest', 'jetstreamin/core']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/cyphermorph:latest', 'core']
   id: 'Build Cyphermorph'
 
 # 2. Build the wanita application Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/wanita:latest', 'jetstreamin/wanita']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/wanita:latest', 'wanita']
   id: 'Build Wanita'
 
 # 3. Build the daemon13 application Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/daemon13:latest', 'jetstreamin/daemon13']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/jetstreamin-repo/daemon13:latest', 'daemon13']
   id: 'Build Daemon13'
 
 # 4. Push the cyphermorph image to Artifact Registry
@@ -47,7 +42,7 @@ steps:
   args:
     - 'apply'
     - '-f'
-    - 'jetstreamin/k8s/'
+    - 'k8s/'
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=jetstreamin-cluster'

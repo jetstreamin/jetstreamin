@@ -1,0 +1,23 @@
+name: Deploy Mesh Agents
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          sudo apt-get update && sudo apt-get install -y adb sshpass
+      - name: Deploy to Phone (S24)
+        run: ./meshctl/push_s24.sh
+      - name: Deploy to TV
+        run: ./meshctl/push_tv.sh

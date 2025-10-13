@@ -1,0 +1,35 @@
+{
+  "name": "jetstreamin-production-tests",
+  "version": "1.0.0",
+  "description": "Production testing suite for Jetstreamin with Playwright",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:ui": "playwright test --ui",
+    "test:production": "playwright test --config=playwright.production.config.js",
+    "test:staging": "playwright test --config=playwright.staging.config.js",
+    "install:browsers": "playwright install",
+    "ci:test": "playwright test --reporter=github",
+    "performance": "npm run test -- --grep='@performance'",
+    "security": "npm run test -- --grep='@security'",
+    "api": "npm run test -- --grep='@api'",
+    "deploy:test": "npm run test:production && npm run deploy:prod",
+    "deploy:prod": "node scripts/deploy-production.js"
+  },
+  "keywords": ["testing", "playwright", "e2e", "jetstreamin", "production"],
+  "author": "Michael J. Mahon",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "axios": "^1.6.0",
+    "lighthouse": "^11.4.0",
+    "puppeteer": "^21.5.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.0",
+    "aws-sdk": "^2.1490.0"
+  }
+}

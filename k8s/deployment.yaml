@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jetstreamin-deployment
+spec:
+  replicas: 1 # NETA can scale this based on demand
+  selector:
+    matchLabels:
+      app: jetstreamin
+  template:
+    metadata:
+      labels:
+        app: jetstreamin
+    spec:
+      containers:
+      - name: jetstreamin-app
+        image: us-central1-docker.pkg.dev/gen-lang-client-0854112426/jetstreamin-repo/jetstreamin-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: google-ai-api-key
+              key: "1"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+      serviceAccountName: jetstreamin-sa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jetstreamin-service
+spec:
+  type: LoadBalancer # Exposes the service using a cloud provider's load balancer
+  selector:
+    app: jetstreamin
+  ports:
+  - protocol: TCP
+    port: 80 # Public port
+    targetPort: 8080 # Container port

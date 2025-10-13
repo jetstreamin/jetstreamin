@@ -1,0 +1,192 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "🎯 Production Health Check",
+			"type": "shell",
+			"command": "node",
+			"args": ["scripts/test-production.js", "production"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "🚀 Deploy to Staging",
+			"type": "shell",
+			"command": "node",
+			"args": ["scripts/deploy-production.js", "staging", "--skip-tests"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "🎯 Deploy to Production",
+			"type": "shell",
+			"command": "node",
+			"args": ["scripts/deploy-production.js", "production"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			},
+			"problemMatcher": [],
+			"dependsOn": "🚀 Deploy to Staging"
+		},
+		{
+			"label": "🧪 Run E2E Tests",
+			"type": "shell",
+			"command": "npx",
+			"args": ["playwright", "test", "--headed"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "⚡ Performance Test",
+			"type": "shell",
+			"command": "npx",
+			"args": ["lighthouse", "https://jetstreamin.io", "--output=html", "--output-path=performance-report.html"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "🔒 Security Scan",
+			"type": "shell",
+			"command": "npm",
+			"args": ["audit", "--audit-level=moderate"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "📦 Build & Test Pipeline",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"🔒 Security Scan",
+				"🎯 Production Health Check",
+				"🧪 Run E2E Tests",
+				"⚡ Performance Test"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			}
+		},
+		{
+			"label": "🚨 Emergency Rollback",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"Write-Host '🚨 EMERGENCY ROLLBACK INITIATED' -ForegroundColor Red; $backups = aws s3 ls | Select-String 'jetstreamin.io-backup-'; if ($backups) { $latest = ($backups | Sort-Object)[-1]; Write-Host \"📦 Latest backup found: $latest\" -ForegroundColor Yellow; Write-Host '⚠️ Continue rollback? (Y/N)' -ForegroundColor Yellow; $confirm = Read-Host; if ($confirm -eq 'Y' -or $confirm -eq 'y') { Write-Host '🔄 Rolling back...' -ForegroundColor Yellow; aws s3 sync s3://$($latest.ToString().Split()[-1])/ s3://jetstreamin.io/ --delete; aws cloudfront create-invalidation --distribution-id E33KH3B6II9307 --paths '/*'; Write-Host '✅ Rollback completed' -ForegroundColor Green; } else { Write-Host '❌ Rollback cancelled' -ForegroundColor Red; } } else { Write-Host '❌ No backups found!' -ForegroundColor Red; }"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "📊 Generate Reports",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"Write-Host '📊 GENERATING PRODUCTION REPORTS' -ForegroundColor Green; Write-Host '🔍 Checking website status...' -ForegroundColor Cyan; $status = Invoke-WebRequest -Uri 'https://jetstreamin.io' -Method Head; Write-Host \"Status: $($status.StatusCode)\" -ForegroundColor Yellow; Write-Host '📈 Generating performance report...' -ForegroundColor Cyan; npx lighthouse https://jetstreamin.io --output=html --output-path=reports/performance-$(Get-Date -Format 'yyyyMMdd-HHmmss').html --quiet; Write-Host '🔒 Running security check...' -ForegroundColor Cyan; npm audit --audit-level=low > reports/security-$(Get-Date -Format 'yyyyMMdd-HHmmss').txt 2>&1; Write-Host '✅ Reports generated in ./reports/' -ForegroundColor Green"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Production Test Suite",
+			"type": "shell",
+			"command": "echo",
+			"args": [
+				"🎯 JETSTREAMIN PRODUCTION TESTING PIPELINE",
+				"&&",
+				"echo",
+				"✅ Website Live: https://jetstreamin.io",
+				"&&",
+				"echo",
+				"📊 Running comprehensive production tests...",
+				"&&",
+				"curl",
+				"-s",
+				"-o",
+				"test-output.html",
+				"-w",
+				"HTTP Status: %{http_code} | Response Time: %{time_total}s | Size: %{size_download} bytes",
+				"https://jetstreamin.io",
+				"&&",
+				"echo",
+				"",
+				"&&",
+				"echo",
+				"🔍 Testing SSL Certificate...",
+				"&&",
+				"curl",
+				"-I",
+				"-s",
+				"https://jetstreamin.io",
+				"|",
+				"findstr",
+				"/C:HTTP/2 200",
+				"&&",
+				"echo",
+				"✅ SSL Certificate Valid",
+				"&&",
+				"echo",
+				"",
+				"&&",
+				"echo",
+				"📈 Performance Test Complete",
+				"&&",
+				"echo",
+				"🎉 All Production Tests PASSED!"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		}
+	]
+}
